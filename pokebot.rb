@@ -65,7 +65,8 @@ class Pokebot::Poller
       2.times do
         form = page.form_with(class: 'checkpoint')
         if form
-          form.radiobutton_with(name: 'name_action_selected', value: 'dont_save').check
+          radiobutton = form.radiobutton_with(name: 'name_action_selected', value: 'dont_save')
+          radiobutton.check if radiobutton
           page = form.submit(form.button_with(name: 'submit[Continue]'))
         end
       end
