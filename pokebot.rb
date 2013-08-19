@@ -2,9 +2,11 @@ require 'active_support/core_ext/object/blank.rb'
 require 'active_support/core_ext/string/inflections'
 require 'haml'
 require 'mechanize'
+require 'redis'
+require 'redis/connection/hiredis'
 require 'sinatra'
 
-pokes = Hash.new(0)
+redis = Redis.new(uri: ENV[ENV['REDIS_PROVIDER']])
 
 Thread.new do
   agent = Mechanize.new
@@ -41,8 +43,11 @@ Thread.new do
       poke_back_href = poke_back.attributes['href'].value
       poker_name = poke.search('.pokerName').first.text
       agent.get(poke_back_href)
-      pokes[poker_name] += 1
-      $stdout.puts "Poked #{poker_name} #{pokes[poker_name]} times."
+      id = poker_name.parameterize
+      redis.sadd('pokers', id)
+      redis.set("poker:#{id}:name", poker_name)
+      times = redis.incr("poker:#{id}:times")
+      $stdout.puts "Poked #{poker_name} #{times} times."
       $stdout.flush
     end
     sleep (ENV['INTERVAL'].to_f || 5.0)
@@ -50,7 +55,12 @@ Thread.new do
 end
 
 get '/' do
-  haml :index, locals: { pokes: pokes.sort_by { |key, value| value }.reverse }
+  pokes = redis.smembers('pokers').map do |id|
+    name = redis.get("poker:#{id}:name")
+    times = redis.get("poker:#{id}:times")
+    OpenStruct.new(id: id, name: name, times: times)
+  end.sort_by(&:times).reverse
+  haml :index, locals: { pokes: pokes }
 end
 
 __END__
@@ -67,7 +77,7 @@ __END__
 @@ index
 - if pokes.present?
   %ul
-    - pokes.each do |(name, times)|
-      %li Poked #{name} #{times} #{'time'.pluralize(times)}.
+    - pokes.each do |poke|
+      %li Poked #{poke.name} #{poke.times} #{'time'.pluralize(poke.times)}.
 - else
   %p No pokes yet.
