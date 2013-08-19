@@ -70,6 +70,7 @@ Thread.new do
         $stdout.puts "Poked #{poker_name} #{times} times."
         $stdout.flush
       end
+      redis.incr('runs')
       sleep (ENV['INTERVAL'].to_f || 5.0)
     end
   rescue => e
@@ -87,7 +88,8 @@ get '/' do
     times = redis.get("poker:#{id}:times")
     OpenStruct.new(id: id, name: name, times: times)
   end.sort_by(&:times).reverse
-  haml :index, locals: { pokes: pokes }
+  runs = redis.get('runs')
+  haml :index, locals: { pokes: pokes, runs: runs }
 end
 
 __END__
@@ -108,3 +110,4 @@ __END__
       %li Poked #{poke.name} #{poke.times} #{'time'.pluralize(poke.times)}.
 - else
   %p No pokes yet.
+%p Pokebot has checked #{runs} #{'run'.pluralize(runs)}.
