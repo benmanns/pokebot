@@ -22,7 +22,7 @@ class Pokebot < Sinatra::Base
       times = redis.get("poker:#{id}:times")
       OpenStruct.new(id: id, name: name, times: times)
     end.sort_by(&:times).reverse
-    runs = redis.get('runs')
+    runs = redis.get('runs') || 0
     haml :index, locals: { pokes: pokes, runs: runs }
   end
 end
