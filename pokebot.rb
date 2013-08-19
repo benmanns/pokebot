@@ -1,3 +1,6 @@
+require 'active_support/core_ext/object/blank.rb'
+require 'active_support/core_ext/string/inflections'
+require 'haml'
 require 'mechanize'
 require 'sinatra'
 
@@ -47,5 +50,24 @@ Thread.new do
 end
 
 get '/' do
-  pokes.inspect
+  haml :index, locals: { pokes: pokes.sort_by { |key, value| value }.reverse }
 end
+
+__END__
+
+@@ layout
+%html
+  %head
+    %title Pokebot
+  %body
+    %div.container
+      %h1 Pokebot
+      = yield
+
+@@ index
+- if pokes.present?
+   %ul
+    - pokes.each do |(name, times)|
+      %li Poked #{name} #{times} #{'time'.pluralize(times)}.
+- else
+  %p No pokes yet.
