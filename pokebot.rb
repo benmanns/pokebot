@@ -1,4 +1,5 @@
 require 'mechanize'
+require 'sinatra'
 
 pokes = Hash.new(0)
 
@@ -29,15 +30,22 @@ end
   end
 end
 
-loop do
-  page = agent.get('https://m.facebook.com/pokes')
-  page.search('#root .poke').each do |poke|
-    poke_back = poke.search('a[href^="/a/notifications.php?poke="]').first
-    poke_back_href = poke_back.attributes['href'].value
-    poker_name = poke.search('.pokerName').first.text
-    agent.get(poke_back_href)
-    pokes[poker_name] += 1
-    puts "Poked #{poker_name} #{pokes[poker_name]} times."
+Thread.new do
+  loop do
+    page = agent.get('https://m.facebook.com/pokes')
+    page.search('#root .poke').each do |poke|
+      poke_back = poke.search('a[href^="/a/notifications.php?poke="]').first
+      poke_back_href = poke_back.attributes['href'].value
+      poker_name = poke.search('.pokerName').first.text
+      agent.get(poke_back_href)
+      pokes[poker_name] += 1
+      $stdout.puts "Poked #{poker_name} #{pokes[poker_name]} times."
+      $stdout.flush
+    end
+    sleep (ENV['INTERVAL'].to_f || 5.0)
   end
-  sleep (ENV['INTERVAL'].to_f || 5.0)
+end
+
+get '/' do
+  pokes.inspect
 end
