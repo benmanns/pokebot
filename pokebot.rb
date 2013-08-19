@@ -6,12 +6,35 @@ require 'haml'
 require 'mechanize'
 require 'redis'
 require 'redis/connection/hiredis'
-require 'sinatra'
+require 'sinatra/base'
 
-redis = Redis.new(uri: ENV[ENV['REDIS_PROVIDER']])
+class Pokebot < Sinatra::Base
+  attr_reader :redis
 
-Thread.new do
-  begin
+  def initialize
+    @redis = Redis.new(uri: ENV[ENV['REDIS_PROVIDER']])
+    super
+  end
+
+  get '/' do
+    pokes = redis.smembers('pokers').map do |id|
+      name = redis.get("poker:#{id}:name")
+      times = redis.get("poker:#{id}:times")
+      OpenStruct.new(id: id, name: name, times: times)
+    end.sort_by(&:times).reverse
+    runs = redis.get('runs')
+    haml :index, locals: { pokes: pokes, runs: runs }
+  end
+end
+
+class Pokebot::Poller
+  attr_reader :redis
+
+  def initialize
+    @redis = Redis.new(uri: ENV[ENV['REDIS_PROVIDER']])
+  end
+
+  def poll
     agent = Mechanize.new
 
     cookies = redis.get('cookies')
@@ -80,14 +103,4 @@ Thread.new do
     sleep 30
     retry
   end
-end
-
-get '/' do
-  pokes = redis.smembers('pokers').map do |id|
-    name = redis.get("poker:#{id}:name")
-    times = redis.get("poker:#{id}:times")
-    OpenStruct.new(id: id, name: name, times: times)
-  end.sort_by(&:times).reverse
-  runs = redis.get('runs')
-  haml :index, locals: { pokes: pokes, runs: runs }
 end
