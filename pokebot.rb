@@ -1,5 +1,7 @@
 require 'mechanize'
 
+pokes = Hash.new(0)
+
 agent = Mechanize.new
 
 page = agent.get('https://m.facebook.com/')
@@ -34,6 +36,8 @@ loop do
     poke_back_href = poke_back.attributes['href'].value
     poker_name = poke.search('.pokerName').first.text
     agent.get(poke_back_href)
+    pokes[poker_name] += 1
+    puts "Poked #{poker_name} #{pokes[poker_name]} times."
   end
   sleep (ENV['INTERVAL'].to_f || 5.0)
 end
