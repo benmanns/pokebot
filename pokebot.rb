@@ -66,7 +66,7 @@ __END__
 
 @@ index
 - if pokes.present?
-   %ul
+  %ul
     - pokes.each do |(name, times)|
       %li Poked #{name} #{times} #{'time'.pluralize(times)}.
 - else
