@@ -12,7 +12,7 @@ class Pokebot < Sinatra::Base
   attr_reader :redis
 
   def initialize
-    @redis = Redis.new(uri: ENV[ENV['REDIS_PROVIDER']])
+    @redis = Redis.new(url: ENV[ENV['REDIS_PROVIDER']])
     super
   end
 
@@ -31,7 +31,7 @@ class Pokebot::Poller
   attr_reader :redis
 
   def initialize
-    @redis = Redis.new(uri: ENV[ENV['REDIS_PROVIDER']])
+    @redis = Redis.new(url: ENV[ENV['REDIS_PROVIDER']])
   end
 
   def poll
