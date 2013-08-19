@@ -94,7 +94,7 @@ class Pokebot::Poller
         $stdout.flush
       end
       redis.incr('runs')
-      sleep (ENV['INTERVAL'].to_f || 5.0)
+      sleep (if ENV['INTERVAL'].present? then ENV['INTERVAL'].to_f else 5.0 end)
     end
   rescue => e
     $stderr.puts e
