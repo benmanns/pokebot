@@ -26,3 +26,14 @@ end
     page = form.submit(form.button_with(name: 'submit[Continue]'))
   end
 end
+
+loop do
+  page = agent.get('https://m.facebook.com/pokes')
+  page.search('#root .poke').each do |poke|
+    poke_back = poke.search('a[href^="/a/notifications.php?poke="]').first
+    poke_back_href = poke_back.attributes['href'].value
+    poker_name = poke.search('.pokerName').first.text
+    agent.get(poke_back_href)
+  end
+  sleep (ENV['INTERVAL'].to_f || 5.0)
+end
