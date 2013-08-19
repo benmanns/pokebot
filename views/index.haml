@@ -1,0 +1,7 @@
+- if pokes.present?
+  %ul
+    - pokes.each do |poke|
+      %li Poked #{poke.name} #{poke.times} #{'time'.pluralize(poke.times)}.
+- else
+  %p No pokes yet.
+%p Pokebot has checked #{runs} #{'time'.pluralize(runs)}.

@@ -91,23 +91,3 @@ get '/' do
   runs = redis.get('runs')
   haml :index, locals: { pokes: pokes, runs: runs }
 end
-
-__END__
-
-@@ layout
-%html
-  %head
-    %title Pokebot
-  %body
-    %div.container
-      %h1 Pokebot
-      = yield
-
-@@ index
-- if pokes.present?
-  %ul
-    - pokes.each do |poke|
-      %li Poked #{poke.name} #{poke.times} #{'time'.pluralize(poke.times)}.
-- else
-  %p No pokes yet.
-%p Pokebot has checked #{runs} #{'run'.pluralize(runs)}.
