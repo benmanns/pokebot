@@ -1,3 +1,5 @@
+require 'tempfile'
+
 require 'active_support/core_ext/object/blank.rb'
 require 'active_support/core_ext/string/inflections'
 require 'haml'
@@ -11,29 +13,46 @@ redis = Redis.new(uri: ENV[ENV['REDIS_PROVIDER']])
 Thread.new do
   agent = Mechanize.new
 
-  page = agent.get('https://m.facebook.com/')
+  cookies = redis.get('cookies')
+  if cookies
+    Tempfile.open(['cookies', '.yml']) do |file|
+      file.write(cookies)
+      file.rewind
+      agent.cookie_jar.load(file.path)
+    end
+  else
+    page = agent.get('https://m.facebook.com/')
 
-  page = page.form_with(id: 'login_form').tap do |form|
-    form.email = ENV['FACEBOOK_EMAIL']
-    form.pass = ENV['FACEBOOK_PASS']
-  end.submit
+    page = page.form_with(id: 'login_form').tap do |form|
+      form.email = ENV['FACEBOOK_EMAIL']
+      form.pass = ENV['FACEBOOK_PASS']
+    end.submit
 
-  form = page.form_with(class: 'checkpoint')
-  if form
-    page = form.submit(form.button_with(name: 'submit[Continue]'))
-  end
-
-  form = page.form_with(class: 'checkpoint')
-  if form
-    page = form.submit(form.button_with(name: 'submit[This is Okay]'))
-  end
-
-  2.times do
     form = page.form_with(class: 'checkpoint')
     if form
-      form.radiobutton_with(name: 'name_action_selected', value: 'dont_save').check
       page = form.submit(form.button_with(name: 'submit[Continue]'))
     end
+
+    form = page.form_with(class: 'checkpoint')
+    if form
+      page = form.submit(form.button_with(name: 'submit[This is Okay]'))
+    end
+
+    2.times do
+      form = page.form_with(class: 'checkpoint')
+      if form
+        form.radiobutton_with(name: 'name_action_selected', value: 'dont_save').check
+        page = form.submit(form.button_with(name: 'submit[Continue]'))
+      end
+    end
+
+    cookies = Tempfile.open(['cookies', '.yml']) do |file|
+      agent.cookie_jar.save(file.path, session: true)
+      file.rewind
+      file.read
+    end
+
+    redis.set('cookies', cookies)
   end
 
   loop do
