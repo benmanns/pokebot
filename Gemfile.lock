@@ -10,6 +10,8 @@ GEM
     atomic (1.1.13)
     domain_name (0.5.13)
       unf (>= 0.0.5, < 1.0.0)
+    haml (4.0.3)
+      tilt
     http-cookie (1.0.1)
       domain_name (~> 0.5)
     i18n (0.6.5)
@@ -52,5 +54,6 @@ PLATFORMS
 
 DEPENDENCIES
   activesupport
+  haml
   mechanize
   sinatra
