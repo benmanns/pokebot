@@ -1,1 +1,1 @@
-web: bundle exec ruby pokebot.rb -p $PORT
+web: bundle exec rackup -p $PORT
