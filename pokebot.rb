@@ -82,6 +82,9 @@ class Pokebot::Poller
 
     loop do
       page = agent.get('https://m.facebook.com/pokes')
+
+      raise "Logged out." if page.form_with(id: 'login_form')
+
       page.search('#root .poke').each do |poke|
         poke_back = poke.search('a[href^="/a/notifications.php?poke="]').first
         poke_back_href = poke_back.attributes['href'].value
