@@ -7,6 +7,8 @@ You can run Pokebot as a free Heroku app.
 ```sh
 heroku create
 heroku config:set FACEBOOK_EMAIL="user@example.com" FACEBOOK_PASSWORD="hunter2"
+heroku addons:add redistogo:nano
+heroku config:set REDIS_PROVIDER=REDISTOGO_URL
 git push heroku master
 ```
 
